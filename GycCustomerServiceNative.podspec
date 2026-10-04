@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'GycCustomerServiceNative'
-  s.version = '0.1.2'
+  s.version = '0.1.3'
   s.summary = '腾讯客服原生会话与展示适配'
   s.homepage = 'https://github.com/gycrosskit/customer-service'
   s.license = { :type => 'Apache-2.0', :file => 'LICENSE' }

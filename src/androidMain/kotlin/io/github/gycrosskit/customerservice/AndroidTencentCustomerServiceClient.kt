@@ -94,7 +94,10 @@ class AndroidTencentCustomerServiceClient(
         avatar: String,
     ): Boolean = withContext(Dispatchers.Main.immediate + NonCancellable) {
         val sdk = TencentAiDeskCustomer.getInstance()
-        if (ownedIdentity?.userId != runtimeUser() || ownedIdentity?.userId != sdkUser(sdk) || ownedIdentity == null) {
+        val identity = ownedIdentity
+        val configuredAppId = TUILogin.getSdkAppId()
+        if (identity == null || identity.userId != runtimeUser() || identity.userId != sdkUser(sdk) ||
+            (configuredAppId > 0 && configuredAppId != identity.appId)) {
             onSdkError("syncProfile", -1, "Customer service identity is no longer owned")
             return@withContext false
         }
@@ -119,7 +122,10 @@ class AndroidTencentCustomerServiceClient(
     fun chatIntent(activity: Activity): Intent {
         check(!activity.isFinishing && !activity.isDestroyed)
         val sdk = TencentAiDeskCustomer.getInstance()
-        check(ownedIdentity != null && ownedIdentity?.userId == runtimeUser() && ownedIdentity?.userId == sdkUser(sdk))
+        val identity = ownedIdentity
+        val configuredAppId = TUILogin.getSdkAppId()
+        check(identity != null && identity.userId == runtimeUser() && identity.userId == sdkUser(sdk) &&
+            (configuredAppId <= 0 || configuredAppId == identity.appId))
         return sdk.getCustomerServiceChatIntent(activity)
     }
 
