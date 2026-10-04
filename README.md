@@ -95,3 +95,11 @@ Swift 回调契约 `bash verification/callbacks/verify.sh` 同样先红后绿。
 | Maven / Git Pod | `0.1.3` / `0.1.3` |
 
 Android aideskcustomer 2.6.0 + IM 9.1.7818；iOS AIDeskCustomer 1.4.1 + TDesk 2.9.141 + IM 9.1.7818。候选尚待新版本远程验收，设备行为不由编译/链接推断。
+
+## 0.1.3 本地发布制品校验
+
+Fresh macOS staging 与归档解包复验均通过，全部 5 个 publication 的声明文件四类哈希、四类 sidecar、Apache-2.0 POM 及同名 available-at 目标身份均已校验。Maven 归档 SHA-256：`85b3817d5ede0f1b7f0192659bb855b16bae16076c35b34d7aa040e331d698f4`。
+
+Maven / Git Pod `0.1.3`；iOS AIDeskCustomer `1.4.1` / TDesk `2.9.141` / IM `9.1.7818`。
+
+新版本标签 / Release / JitPack 全变体下载与真实远程消费者仍待完成；本地验证不代替发布或设备验收。
