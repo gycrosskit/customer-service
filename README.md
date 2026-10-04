@@ -6,21 +6,22 @@ Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账�
 ## 安装与消费
 
 包装代码使用 [Apache-2.0](LICENSE)；[GitHub 仓库](https://github.com/gycrosskit/customer-service) 通过不可变标签和 Release 发布。
-KMP 坐标是 `com.github.gycrosskit:customer-service:0.1.0`；Android 最低 API 24、iOS 原生最低 15.0。
+KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.1`；Android 最低 API 24、iOS 原生最低 15.0。
 KMP root 提供数据类型与 Android 原生适配器；iOS Swift 客户端单独用 `GycCustomerServiceNative` Pod，不要求宿主再导出未消费的 KMP Bridge。
 
 ```kotlin
 // 在 dependencyResolutionManagement.repositories 中添加 maven("https://jitpack.io")。
-implementation("com.github.gycrosskit:customer-service:0.1.0")
+implementation("com.github.gycrosskit.customer-service:customer-service:0.1.1")
 ```
 
 ```ruby
 pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-service.git', :tag => '0.1.0'
 ```
 
-本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven-0.1.0.tar.gz`
+本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven-0.1.1.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
-iOS 验证将 native 归档解包后，用仓库外的验证 Podfile 对该 Pod 指定临时 path，正式宿主 Podfile 不保留本机 path。
+iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
+Maven 0.1.1 只修复 JitPack metadata，Swift API 未变，原生 Pod 继续使用已验证的 0.1.0。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
 
@@ -47,7 +48,7 @@ iOS `TencentCloudAIDeskCustomer:1.4.1`、TDesk 四组件 `2.9.141`、IM `TXIMSDK
 厂商通过 Maven/CocoaPods 原坐标取得，不嵌入归档，不替换聊天 UI。
 Android 缓存 POM 的许可证字段是 Apache-2.0；iOS Podspec 与原 LICENSE 是 MIT。
 本仓库包装代码使用 Apache-2.0；厂商依赖继续使用其原许可证及服务条款。
-Release Maven 归档仅含本组件的 AAR/KLIB/metadata，Native 归档仅含本组件 Swift 源码、Podspec、README 和 LICENSE。
+Release Maven 归档仅含本组件的 AAR/KLIB/metadata；Native 0.1.0 归档仅含本组件 Swift 源码、Podspec、README 和 LICENSE。
 
 ## 验证
 
