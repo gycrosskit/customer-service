@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-version=0.1.1
+version=0.1.2
 rm -rf build/maven
 GROUP=com.github.gycrosskit VERSION="$version" bash gradlew --no-daemon publishAllPublicationsToStagingRepository
 python3 scripts/jitpack-metadata.py build/maven
-python3 scripts/verify-maven.py build/maven
+python3 scripts/verify-maven.py build/maven "$version"
 mkdir -p build/release
 # staging 可能保留旧版本；归档只包含本次不可变版本的五个模块。
 archive_paths=()
