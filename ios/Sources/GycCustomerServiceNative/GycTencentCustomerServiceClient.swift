@@ -88,8 +88,10 @@ public final class GycTencentCustomerServiceClient {
 
     public func syncProfile(nickname: String, avatar: String, completion: @escaping (Error?) -> Void) {
         onMain {
+            let configuredAppId = TDeskLogin.getSdkAppID()
             guard let manager = TencentCloudCustomerManager.shared(),
-                  let owned = self.ownedIdentity, self.runtimeUser() == owned.userId, self.sdkUser(manager) == owned.userId else {
+                  let owned = self.ownedIdentity, self.runtimeUser() == owned.userId, self.sdkUser(manager) == owned.userId,
+                  configuredAppId <= 0 || configuredAppId == owned.appId else {
                 completion(self.failure("Customer service identity is no longer owned"))
                 return
             }
@@ -102,8 +104,10 @@ public final class GycTencentCustomerServiceClient {
     /// 只包装厂商页面；真实 dismiss 后回调，照片等全屏子页面不视为关闭。
     public func open(completion: @escaping (Error?) -> Void) {
         onMain {
+            let configuredAppId = TDeskLogin.getSdkAppID()
             guard let manager = TencentCloudCustomerManager.shared(),
                   let owned = self.ownedIdentity, self.runtimeUser() == owned.userId, self.sdkUser(manager) == owned.userId,
+                  configuredAppId <= 0 || configuredAppId == owned.appId,
                   let presenter = self.presenterResolver(), presenter.presentedViewController == nil,
                   self.presentedController == nil, let chat = manager.getCustomerServiceViewController() else {
                 completion(self.failure("Customer service presenter is unavailable"))

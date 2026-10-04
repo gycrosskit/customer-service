@@ -81,3 +81,11 @@ Maven 0.1.1 已从 JitPack 实际下载并核验五个 module/POM 和 API/runtim
 本轮纯 Swift ownership/presentation 与直接编译生产 client 的 callback 契约已通过。`bash verification/callbacks/verify.sh` 用最小厂商/UIKit 替身驱动真实生产 Swift 文件，覆盖 own/borrow、错误成功恢复、迟 init/unInit、foreign 与清理失败重试，不代表厂商 ABI 或真实登录验收。Android/iOS 各 3 项测试、全部 KLIB、真实厂商 Pod iphoneos arm64 最终链接及五模块 Maven 归档均通过；具体发布与远程验证记录见 [发布验收](verification/发布验收.md)。
 
 `bash scripts/verify-native-ios.sh` 在忽略的 `build/native-customer-consumer` 生成独立 UIKit 工程，本地 path 消费全部 Swift public API 并最终链接真实厂商 Pod；不调用真实登录或聊天。该本地验证不能代替发布后 Git/tag 下载消费。
+
+## 当前工作树的未发布修复
+
+同步资料与打开页面也核对已知 Desk AppId，拒绝外部切换到另一 AppId 的同名用户；合法借用允许使用页面和同步资料，但不取得清理权限。SDK getter 未知时仍由宿主统一配置保证。
+
+本轮 Android 3 项测试、Android/iOS arm64/Simulator 编译及真实厂商 Pod 的 UIKit App 最终链接通过。
+`bash verification/android-callbacks/verify.sh` 直接驱动生产 Android client 的 4 个 AppId/borrow 用例，先红后绿；
+Swift 回调契约 `bash verification/callbacks/verify.sh` 同样先红后绿。均不代表真实登录或聊天验收。

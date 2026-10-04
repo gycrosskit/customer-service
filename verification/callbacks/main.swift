@@ -2,6 +2,7 @@ import Foundation
 import ImSDK_Plus
 import TencentCloudAIDeskCustomer
 import TDeskCore
+import UIKit
 let client = GycTencentCustomerServiceClient.shared
 let im = V2TIMManager.instance
 let sdk = TencentCloudCustomerManager.instance
@@ -54,3 +55,33 @@ finish(NSError(domain: "mock", code: -1)); client.reset { result = $0 }
 assert(result == nil && sdk.cleanups.isEmpty)
 TDeskLogin.sdkAppID = 100
 print("Customer same-user foreign SDKAppID preparation/cleanup/failure guards passed")
+
+// 已准备身份被另一AppId的同名用户接管，资料和页面操作均不能落到foreign runtime。
+runtime(nil); prepare(); runtime("member"); finish()
+let presenter = UIViewController()
+client.presenterResolver = { presenter }
+let updates = sdk.profileUpdates
+let pages = sdk.chatRequests
+TDeskLogin.sdkAppID = 101
+client.syncProfile(nickname: "new", avatar: "avatar") { result = $0 }
+assert(result != nil && sdk.profileUpdates == updates)
+client.open { result = $0 }
+assert(result != nil && sdk.chatRequests == pages && presenter.presentedViewController == nil)
+client.reset { result = $0 }; assert(result == nil && sdk.cleanups.isEmpty)
+
+// borrow拥有使用权限但没有注销权限；未知getter保持原兼容行为。
+for appId: Int32 in [100, 0] {
+    TDeskLogin.sdkAppID = 100; runtime("member", ready: false); prepare(); runtime("member"); finish()
+    TDeskLogin.sdkAppID = appId
+    let updatesBefore = sdk.profileUpdates
+    let pagesBefore = sdk.chatRequests
+    client.syncProfile(nickname: "borrow", avatar: "avatar") { result = $0 }
+    assert(result == nil && sdk.profileUpdates == updatesBefore + 1)
+    var openCompleted = false
+    client.open { error in openCompleted = true; assert(error != nil) }
+    assert(sdk.chatRequests == pagesBefore + 1 && presenter.presentedViewController != nil && !openCompleted)
+    client.reset { result = $0 }
+    assert(result == nil && sdk.cleanups.isEmpty && presenter.presentedViewController == nil && openCompleted)
+}
+TDeskLogin.sdkAppID = 100
+print("Customer profile/page AppId guards passed, including borrowed and unknown-AppId runtime")
