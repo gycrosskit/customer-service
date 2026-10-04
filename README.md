@@ -59,10 +59,13 @@ swiftc ios/Sources/GycCustomerServiceNative/CustomerServiceOwnership.swift ios/S
 build/verification/ownership-check
 ```
 
-独立消费工程见 `verification/gradle`，仅从解包 Maven 产物消费。
+独立消费工程见 `verification/gradle`，正式验证通过 exclusiveContent 仅从 JitPack 消费本组件。
 本地候选已通过组件 Android ownership 单测、三种 iOS KLIB 打包、Swift ownership/模态完成检查、
 解包 AAR/KLIB 的独立 Android/iOS 编译与 Framework 链接；宿主 27 项客服/会话定向测试（不含认证 8 项）、
 充和 Debug Kotlin 编译通过。iOS Simulator Shared Framework 与完整 App 链接在最后身份 guard 补丁前通过；
 补丁后重新验证 Swift ownership/模态完成检查、Android ownership 单测与原生 Pod 编译，未重复完整 App 链接。
-本地验证不等同于远程安装；JitPack 与 Git/tag Pod 的实际下载、编译和链接结果单独记录在 [发布验收](verification/发布验收.md)。
+Maven 0.1.1 已从 JitPack 实际下载并核验五个 module/POM 和 API/runtime 产物的 URL、大小与 SHA；
+全新独立消费工程完成 Android、三种 iOS 编译及 Simulator Framework 链接。
+原生 Pod 继续使用已从 Git/tag 实际安装并完成 Swift consumer arm64 Simulator 编译与链接的 0.1.0。
+发布提交、归档 SHA-256、命令及边界记录在 [发布验收](verification/发布验收.md)。
 单测与编译不能替代实际登录、聊天、同 IM 直播账号共存、账号切换和真机生命周期验收。
