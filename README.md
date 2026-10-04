@@ -3,6 +3,99 @@
 Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
 聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。OHOS 没有实现，宿主继续报告 unsupported。
 
+## 架构与调用流程
+
+宿主先完成业务准入并取得凭据，再通过进程级串行屏障调用组件；屏障由宿主与 Live 共用。组件区分「已准备身份」与「是否拥有 SDK runtime」，避免清理其他模块借给客服的 IM 登录。
+
+```mermaid
+flowchart TB
+    H["宿主<br/>准入 / Profile / UserSig"] --> B["宿主共用<br/>串行 SDK 屏障"]
+    B --> A["Android 客服 client"]
+    B --> I["Swift 客服 client<br/>shared"]
+    A --> O["身份判定<br/>actual / AppId / ownsRuntime"]
+    I --> O
+    O --> V["腾讯 AI Desk<br/>共享 V2TIM runtime"]
+    A --> P["厂商 Intent<br/>宿主等待 Activity Result"]
+    I --> U["厂商 ViewController<br/>组件等待真实 dismiss"]
+```
+
+下面画 Android 的准备与清理。prepare、syncProfile、reset 在 Main + NonCancellable 等待 SDK 真正回调；调用方取消自身等待也不能提前释放共用屏障。iOS 使用主线程 completion，遵循相同身份规则。
+
+```mermaid
+sequenceDiagram
+    participant H as 宿主串行屏障
+    participant C as AndroidTencentCustomerServiceClient
+    participant S as AI Desk / V2TIM
+    H->>C: prepare(context, profile)
+    C->>S: 读取 actual user、toolkit AppId、SDK 资料身份
+    alt foreign user 或已知 AppId 冲突且不自有
+        C-->>H: false，拒绝覆盖
+    else 自有旧身份需要切换
+        C->>S: unInit，等待真实回调
+        S-->>C: 清理完成
+        C->>C: 重新判定实际身份，再 prepare
+    else 可初始化或借用相同用户
+        C->>S: initWithProfile
+        S-->>C: 成功或失败回调
+        C->>C: 校验 operationSerial、actual user、AppId
+        C-->>H: 结果；成功后保存 prepared / ownsRuntime
+    else 已准备且 SDK 身份仍匹配
+        C-->>H: true，复用
+    end
+    H->>C: reset()
+    alt 借用、未准备或已被外部接管
+        C->>C: 只清本地身份；未准备不访问 SDK
+        C-->>H: true
+    else 自有且实际身份仍匹配
+        C->>S: unInit
+        S-->>C: 异步回调
+        C->>C: 再核对代次与实际身份
+        C-->>H: 成功清除；失败仍自有则保留供重试
+    end
+```
+
+核心类型只列组件自己的类型；Android 读取 Kotlin `CustomerServiceProfile`，Swift `prepare` 接收对应字段，内部持有独立的同名 Swift `CustomerServiceIdentity`，并非图中的 Kotlin 类型。Swift 模态 completion 仅在真实关闭后结算，照片等子页面不能提前解锁；`reset` 先关闭自有模态页再判定 SDK 清理资格。
+
+```mermaid
+classDiagram
+    class CustomerServiceProfile {
+        +Int appId
+        +String userId
+        +String userSig
+        +String nickname
+        +String avatar
+    }
+    class CustomerServiceIdentity {
+        <<internal>>
+        +appId
+        +userId
+    }
+    class AndroidTencentCustomerServiceClient {
+        +prepare(context, profile) Boolean
+        +syncProfile(nickname, avatar) Boolean
+        +chatIntent(activity) Intent
+        +reset() Boolean
+    }
+    class GycTencentCustomerServiceClient {
+        +shared
+        +presenterResolver
+        +prepare(fields, completion)
+        +open(completion)
+        +reset(completion)
+    }
+    class CustomerServicePresentationCompletion {
+        <<internal>>
+        +presentationCompleted(isPresented)
+        +cancelForReset()
+        +dismissed()
+    }
+    AndroidTencentCustomerServiceClient ..> CustomerServiceProfile : 接收
+    AndroidTencentCustomerServiceClient --> CustomerServiceIdentity : Kotlin prepared identity
+    GycTencentCustomerServiceClient ..> CustomerServicePresentationCompletion : 经自有导航容器结算
+```
+
+源码入口：[Kotlin 资料与身份判定](src/commonMain/kotlin/io/github/gycrosskit/customerservice/CustomerServiceProfile.kt)、[Android 原生适配器](src/androidMain/kotlin/io/github/gycrosskit/customerservice/AndroidTencentCustomerServiceClient.kt)、[Swift client](ios/Sources/GycCustomerServiceNative/GycTencentCustomerServiceClient.swift)、[Swift identity](ios/Sources/GycCustomerServiceNative/CustomerServiceOwnership.swift)、[真实 dismiss completion](ios/Sources/GycCustomerServiceNative/CustomerServicePresentationCompletion.swift)。OHOS 没有客服实现；页面等待、超时、业务结果与直播资料恢复由宿主负责。
+
 ## 安装与消费
 
 包装代码使用 [Apache-2.0](LICENSE)；[GitHub 仓库](https://github.com/gycrosskit/customer-service) 通过不可变标签和 Release 发布。
