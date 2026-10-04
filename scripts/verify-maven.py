@@ -6,7 +6,7 @@ from pathlib import Path
 
 repository = Path(sys.argv[1]).resolve()
 base = repository / "com/github/gycrosskit"
-version = "0.1.1"
+version = sys.argv[2] if len(sys.argv) > 2 else "0.1.2"
 modules = sorted(file for file in base.rglob("*.module") if file.parent.name == version)
 assert len(modules) == 5, modules
 for file in modules:

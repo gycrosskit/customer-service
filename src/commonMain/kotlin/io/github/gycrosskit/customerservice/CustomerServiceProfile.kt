@@ -17,10 +17,23 @@ internal fun customerServicePreparationAction(
     owned: CustomerServiceIdentity?,
     actualUser: String?,
     target: CustomerServiceIdentity,
-): CustomerServicePreparationAction = when {
-    owned == target && actualUser == target.userId -> CustomerServicePreparationAction.REUSE
-    actualUser != null && actualUser != target.userId && actualUser != owned?.userId ->
-        CustomerServicePreparationAction.REJECT
-    owned != null && actualUser == owned.userId && owned != target -> CustomerServicePreparationAction.RESET
-    else -> CustomerServicePreparationAction.INITIALIZE
+    ownsRuntime: Boolean = true,
+    sdkReady: Boolean = true,
+    configuredSdkAppId: Int = owned?.appId ?: 0,
+): CustomerServicePreparationAction {
+    val ownsActual = customerServiceOwnsActualIdentity(owned, ownsRuntime, actualUser, configuredSdkAppId)
+    return when {
+        actualUser != null && actualUser != target.userId && !ownsActual ->
+            CustomerServicePreparationAction.REJECT
+        configuredSdkAppId > 0 && actualUser != null && configuredSdkAppId != target.appId && !ownsActual ->
+            CustomerServicePreparationAction.REJECT
+        ownsActual && owned != target -> CustomerServicePreparationAction.RESET
+        owned == target && actualUser == target.userId && sdkReady -> CustomerServicePreparationAction.REUSE
+        else -> CustomerServicePreparationAction.INITIALIZE
+    }
 }
+
+internal fun customerServiceOwnsActualIdentity(prepared: CustomerServiceIdentity?, ownsRuntime: Boolean, actualUser: String?,
+    configuredSdkAppId: Int = prepared?.appId ?: 0): Boolean =
+    ownsRuntime && prepared != null && actualUser == prepared.userId &&
+        (configuredSdkAppId <= 0 || configuredSdkAppId == prepared.appId)
