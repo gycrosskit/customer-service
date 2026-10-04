@@ -21,7 +21,7 @@ pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-
 本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven-0.1.2.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
 iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
-当前候选 Maven/Pod 统一 `0.1.2`，新增共享 IM actual identity 与 own/borrow 保护。旧 Maven `0.1.1` 与 Pod `0.1.0` 的正式远程记录保持独立，新候选实际结果另见发布验收。
+已发布 Maven/Pod 统一 `0.1.2`，新增共享 IM actual identity 与 own/borrow 保护。Release 真实下载和 JitPack 全模块/引用文件哈希通过；新版本远程 Gradle/Pod 最终消费另见 [发布验收](verification/发布验收.md)。旧版本记录保留各自验收范围。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
 
@@ -66,7 +66,7 @@ build/verification/ownership-check
 补丁后重新验证 Swift ownership/模态完成检查、Android ownership 单测与原生 Pod 编译，未重复完整 App 链接。
 Maven 0.1.1 已从 JitPack 实际下载并核验五个 module/POM 和 API/runtime 产物的 URL、大小与 SHA；
 全新独立消费工程完成 Android、三种 iOS 编译及 Simulator Framework 链接。
-旧原生 Pod 0.1.0 已从 Git/tag 实际安装并完成 Swift consumer arm64 Simulator 编译与链接；新候选 0.1.2 另行验证。
+旧原生 Pod 0.1.0 的历史验收保留。0.1.2 已完成真实 JitPack Android/三种 iOS 编译与 Simulator Framework 链接，以及精确 Git/tag Pod 的 UIKit iphoneos arm64 App 最终链接，源码逐字节匹配标签；详见发布验收。
 发布提交、归档 SHA-256、命令及边界记录在 [发布验收](verification/发布验收.md)。
 单测与编译不能替代实际登录、聊天、同 IM 直播账号共存、账号切换和真机生命周期验收。
 
