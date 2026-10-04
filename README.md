@@ -6,22 +6,22 @@ Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账�
 ## 安装与消费
 
 包装代码使用 [Apache-2.0](LICENSE)；[GitHub 仓库](https://github.com/gycrosskit/customer-service) 通过不可变标签和 Release 发布。
-KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.2`；Android 最低 API 24、iOS 原生最低 15.0。
+KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.3`；Android 最低 API 24、iOS 原生最低 15.0。
 KMP root 提供数据类型与 Android 原生适配器；iOS Swift 客户端单独用 `GycCustomerServiceNative` Pod，不要求宿主再导出未消费的 KMP Bridge。
 
 ```kotlin
 // 在 dependencyResolutionManagement.repositories 中添加 maven("https://jitpack.io")。
-implementation("com.github.gycrosskit.customer-service:customer-service:0.1.2")
+implementation("com.github.gycrosskit.customer-service:customer-service:0.1.3")
 ```
 
 ```ruby
-pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-service.git', :tag => '0.1.2'
+pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-service.git', :tag => '0.1.3'
 ```
 
-本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven-0.1.2.tar.gz`
+本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
 iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
-已发布 Maven/Pod 统一 `0.1.2`，新增共享 IM actual identity 与 own/borrow 保护。Release 真实下载和 JitPack 全模块/引用文件哈希通过；新版本远程 Gradle/Pod 最终消费另见 [发布验收](verification/发布验收.md)。旧版本记录保留各自验收范围。
+当前 Maven/Git Pod 发布候选 `0.1.3` 修复已知 AppId 切换后的资料和页面使用保护，合法 borrow 不取得清理权限。归档与精确新版本远程消费正在执行，完成结果记录于 [发布验收](verification/发布验收.md)；旧 `0.1.2` 证据不代算新候选。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
 
@@ -82,10 +82,16 @@ Maven 0.1.1 已从 JitPack 实际下载并核验五个 module/POM 和 API/runtim
 
 `bash scripts/verify-native-ios.sh` 在忽略的 `build/native-customer-consumer` 生成独立 UIKit 工程，本地 path 消费全部 Swift public API 并最终链接真实厂商 Pod；不调用真实登录或聊天。该本地验证不能代替发布后 Git/tag 下载消费。
 
-## 当前工作树的未发布修复
+## 0.1.3 发布候选
 
 同步资料与打开页面也核对已知 Desk AppId，拒绝外部切换到另一 AppId 的同名用户；合法借用允许使用页面和同步资料，但不取得清理权限。SDK getter 未知时仍由宿主统一配置保证。
 
 本轮 Android 3 项测试、Android/iOS arm64/Simulator 编译及真实厂商 Pod 的 UIKit App 最终链接通过。
 `bash verification/android-callbacks/verify.sh` 直接驱动生产 Android client 的 4 个 AppId/borrow 用例，先红后绿；
 Swift 回调契约 `bash verification/callbacks/verify.sh` 同样先红后绿。均不代表真实登录或聊天验收。
+
+| 当前候选渠道 | 配套版本 |
+| --- | --- |
+| Maven / Git Pod | `0.1.3` / `0.1.3` |
+
+Android aideskcustomer 2.6.0 + IM 9.1.7818；iOS AIDeskCustomer 1.4.1 + TDesk 2.9.141 + IM 9.1.7818。候选尚待新版本远程验收，设备行为不由编译/链接推断。
