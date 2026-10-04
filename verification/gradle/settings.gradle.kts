@@ -14,7 +14,10 @@ dependencyResolutionManagement {
     repositories {
         maven("https://maven.aliyun.com/repository/google")
         maven("https://maven.aliyun.com/repository/public")
-        maven("https://jitpack.io") { content { includeGroup("com.github.gycrosskit") } }
+        exclusiveContent {
+            forRepository { maven("https://jitpack.io") }
+            filter { includeGroup("com.github.gycrosskit.customer-service") }
+        }
         google()
         mavenCentral()
         maven("https://mirrors.tencent.com/nexus/repository/maven-tencent/")

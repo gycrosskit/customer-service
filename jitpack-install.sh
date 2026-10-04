@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-version=0.1.0
+version=0.1.1
 [[ "${VERSION:?JitPack must provide VERSION}" == "$version" ]] || { echo "Unsupported version" >&2; exit 1; }
 archive="customer-service-maven-${version}.tar.gz"
 # 从不可变标签的 Release 下载 macOS 生成的完整产物，并校验仓库中的 SHA-256。

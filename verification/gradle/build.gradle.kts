@@ -10,7 +10,7 @@ kotlin {
     iosX64()
     iosSimulatorArm64 { binaries.framework { baseName = "CustomerServiceConsumer" } }
     sourceSets.commonMain.dependencies {
-        implementation("com.github.gycrosskit:customer-service:0.1.0")
+        implementation("com.github.gycrosskit.customer-service:customer-service:0.1.1")
     }
 }
 android {
