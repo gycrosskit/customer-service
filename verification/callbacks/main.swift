@@ -85,3 +85,32 @@ for appId: Int32 in [100, 0] {
 }
 TDeskLogin.sdkAppID = 100
 print("Customer profile/page AppId guards passed, including borrowed and unknown-AppId runtime")
+
+// 空白凭据不得进入厂商初始化，保持与 Android 的输入边界一致。
+let invalidProfiles: [(Int32, String, String)] = [(0, "member", "sig"), (100, " \t", "sig"), (100, "member", "\n")]
+for (appId, user, signature) in invalidProfiles {
+    let calls = sdk.initializations.count
+    var completed = false
+    client.prepare(appId: appId, userId: user, userSig: signature, nickname: "", avatar: "") { error in
+        completed = true; assert(error != nil)
+    }
+    assert(completed && sdk.initializations.count == calls)
+}
+im.actualStatus = .loggingIn
+prepare(); assert(result != nil && sdk.initializations.isEmpty)
+im.actualStatus = .loggedOut
+
+// 展示后的全屏子页不会结算 open，重复打开也不覆盖原 completion。
+runtime("member", ready: false); prepare(); runtime("member"); finish()
+var closedCount = 0
+client.open { error in closedCount += 1; assert(error != nil) }
+let navigation = presenter.presentedViewController!
+navigation.viewDidDisappear(false)
+assert(closedCount == 0)
+client.open { error in assert(error != nil) }
+assert(closedCount == 0 && presenter.presentedViewController === navigation)
+client.reset { result = $0 }
+assert(result == nil && closedCount == 1 && sdk.cleanups.isEmpty)
+navigation.viewDidDisappear(false)
+assert(closedCount == 1)
+print("Customer invalid-input, pending-login and full-screen child lifecycle contracts passed")
