@@ -3,7 +3,7 @@
 Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
 聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。OHOS 没有实现，宿主继续报告 unsupported。
 
-当前 Maven / Git Pod 候选 **0.1.4**：Swift 拒绝纯空白 userId / UserSig，并保留传给 SDK 的凭据原文；补充输入校验、取消与迟到回调、页面展示和清理回归，完善公共 API 注释。**发布准备中，完成远程验收后更新**。Maven 与 `GycCustomerServiceNative` Git Pod 使用同一候选标签 `0.1.4`；本库无 OHOS 实现。
+当前 Maven / Git Pod **0.1.4**：Swift 拒绝纯空白 userId / UserSig，并保留传给 SDK 的凭据原文；补充输入校验、取消与迟到回调、页面展示和清理回归，完善公共 API 注释。**已发布；JitPack、公开产物校验与干净远程消费通过**。Maven 与 `GycCustomerServiceNative` Git Pod 使用同一发布标签 `0.1.4`；本库无 OHOS 实现。
 
 ## 架构与调用流程
 
@@ -116,7 +116,7 @@ pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-
 本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
 iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
-当前 Maven/Git Pod 发布候选 `0.1.4` 的归档与精确版本远程消费处于发布准备中，完成远程验收后更新 [发布验收](verification/发布验收.md)。AppId 使用保护与合法 borrow 的清理权限规则沿用既有实现；历史版本证据不代算新候选。
+当前 Maven/Git Pod 发布候选 `0.1.4` 的归档与精确版本远程消费处于已发布，干净远程消费通过 [发布验收](verification/发布验收.md)。AppId 使用保护与合法 borrow 的清理权限规则沿用既有实现；历史版本证据不代算新候选。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
 
@@ -202,3 +202,11 @@ Maven / Git Pod `0.1.3`；iOS AIDeskCustomer `1.4.1` / TDesk `2.9.141` / IM `9.1
 精确 JitPack 0.1.3 独立消费者：Android AAR、iOS arm64/x64/simulator-arm64 编译及 simulator Framework，29 tasks / 22s。新 Git Pod 0.1.3 真实下载，UIKit iphoneos arm64 App 与 debug.dylib 最终 BUILD SUCCEEDED；三个生产 Swift 文件逐字节等于 tag。Pod lock 为 AIDeskCustomer 1.4.1、TDesk 2.9.141、IM 9.1.7818。
 
 实际日志与 JSON 账单位于 `build/remote-library-review/`。真实设备、业务账号登录/聊天/直播/PiP、权限 UI、真实 Bug/通知发送未执行。
+
+## 0.1.4 本轮测试与远程验收
+
+2026-10-05：本轮自有源码和公开 API 审查、关键回归与受影响平台编译通过；真实 JitPack `0.1.4` 的最终标签提交、5 个 publications 的 POM/Module、所有变体文件大小与四种声明哈希、内部精确版本及 available-at 均通过。Release Maven 归档重新下载 SHA-256 为 `cd4dc02bc34989816f24efcd7ed3b035eb06c816e9d66a347ace1ec6b2ce3df4`。公开 MD5/SHA-1 sidecar 通过；SHA-256/SHA-512 sidecar 的 HTTP 404 记录为渠道缺失。
+
+干净消费工程使用固定远程版本，没有本地 Maven、includeBuild 或其他组件源码替代；通过现有入口的 Android/iOS 编译和相应最终链接。 新 Git Pod 从远程标签安装，实际编译 Swift 与标签逐字节匹配，纯 UIKit iphoneos arm64 App 链接通过。
+
+完整回归范围、精简原则、注释契约与仍需设备/业务验收的边界见 [14 个功能组件测试与 API 审查](https://github.com/gycrosskit/.github/blob/main/docs/组件测试与API审查.md)。源码测试与远程消费不代替真机和厂商业务验收。
