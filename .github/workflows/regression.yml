@@ -1,0 +1,37 @@
+name: Source regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: bash gradlew --init-script "$PWD/scripts/ci-repositories.gradle" testDebugUnitTest compileReleaseKotlinAndroid --no-daemon --max-workers=1 --stacktrace
+  native:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: bash verification/callbacks/verify.sh
+      - run: bash gradlew --init-script "$PWD/scripts/ci-repositories.gradle" iosSimulatorArm64Test compileKotlinIosArm64 compileKotlinIosX64 --no-daemon --max-workers=1 --stacktrace
