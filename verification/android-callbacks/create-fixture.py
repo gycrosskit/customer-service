@@ -30,10 +30,11 @@ import com.tencent.imsdk.v2.V2TIMManager
 import com.tencent.qcloud.deskcore.TUILogin
 class TencentAiDeskCustomer {
  var isUserLoggedIn=false;var loginUser:String?=null;var updates=0;var pages=0;var cleanups=0
+ var deferProfile=false;var profile: TencentAiDeskCustomerLoginCallback?=null
  var initializeCalls=0;var deferInitialization=false;var deferCleanup=false;var initialization:AIDeskCallback?=null;var cleanup:AIDeskCallback?=null
  fun setTheme(value:Any){};fun setShowAvatar(value:Boolean){};fun setShowHumanService(value:Boolean){};fun setShowLeaveQueue(value:Boolean){};fun setShowServiceRating(value:Boolean){};fun setShowEndHumanService(value:Boolean){};fun setShowNickName(value:Boolean){}
  fun initWithProfile(context:Context,appId:Int,userId:String,userSig:String,nickname:String,avatar:String,callback:AIDeskCallback) {initializeCalls++;TUILogin.appId=appId;V2TIMManager.getInstance().loginUser=userId;loginUser=userId;isUserLoggedIn=true;if(deferInitialization) initialization=callback else callback.onSuccess()}
- fun setSelfInfo(nickname:String,avatar:String,callback:TencentAiDeskCustomerLoginCallback){updates++;callback.onSuccess()}
+ fun setSelfInfo(nickname:String,avatar:String,callback:TencentAiDeskCustomerLoginCallback){updates++;if(deferProfile) profile=callback else callback.onSuccess()}
  fun getCustomerServiceChatIntent(activity:Activity):Intent {pages++;return Intent()}
  fun unInit(callback:AIDeskCallback){cleanups++;if(deferCleanup) cleanup=callback else callback.onSuccess()}
  companion object {private val instance=TencentAiDeskCustomer();fun getInstance()=instance}

@@ -3,7 +3,7 @@
 Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
 聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。OHOS 没有实现，宿主继续报告 unsupported。
 
-当前 Maven / Git Pod **0.1.4**：Swift 拒绝纯空白 userId / UserSig，并保留传给 SDK 的凭据原文；补充输入校验、取消与迟到回调、页面展示和清理回归，完善公共 API 注释。**已发布；JitPack、公开产物校验与干净远程消费通过**。Maven 与 `GycCustomerServiceNative` Git Pod 使用同一发布标签 `0.1.4`；本库无 OHOS 实现。
+当前 Maven / Git Pod 候选 **0.1.5**：syncProfile在SDK回调后重新校验代次、实际身份和已知AppId，拒绝reset或外部接管后的迟到成功。**未发布，待新候选真实远程核验**。上版0.1.4已发布，历史验收不代算候选。详见[完整源码审查](verification/完整源码审查.md)及[腾讯客服鸿蒙接入核查](verification/腾讯客服鸿蒙接入核查.md)。
 
 ## 架构与调用流程
 
@@ -101,22 +101,22 @@ classDiagram
 ## 安装与消费
 
 包装代码使用 [Apache-2.0](LICENSE)；[GitHub 仓库](https://github.com/gycrosskit/customer-service) 通过不可变标签和 Release 发布。
-KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.4`；Android 最低 API 24、iOS 原生最低 15.0。
+KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.5`；Android 最低 API 24、iOS 原生最低 15.0。
 KMP root 提供数据类型与 Android 原生适配器；iOS Swift 客户端单独用 `GycCustomerServiceNative` Pod，不要求宿主再导出未消费的 KMP Bridge。
 
 ```kotlin
 // 在 dependencyResolutionManagement.repositories 中添加 maven("https://jitpack.io")。
-implementation("com.github.gycrosskit.customer-service:customer-service:0.1.4")
+implementation("com.github.gycrosskit.customer-service:customer-service:0.1.5")
 ```
 
 ```ruby
-pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-service.git', :tag => '0.1.4'
+pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-service.git', :tag => '0.1.5'
 ```
 
 本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
 iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
-当前 Maven/Git Pod 发布候选 `0.1.4` 的归档与精确版本远程消费处于已发布，干净远程消费通过 [发布验收](verification/发布验收.md)。AppId 使用保护与合法 borrow 的清理权限规则沿用既有实现；历史版本证据不代算新候选。
+当前 Maven/Git Pod 发布候选 `0.1.5` 的归档与精确版本远程消费待核验；上版0.1.4历史结果见 [发布验收](verification/发布验收.md)。AppId 使用保护与合法 borrow 的清理权限规则沿用既有实现；历史版本证据不代算新候选。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
 
