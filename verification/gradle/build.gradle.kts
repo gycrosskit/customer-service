@@ -8,7 +8,7 @@ kotlin {
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
     }
     iosArm64()
-    iosX64()
+    iosX64 { binaries.framework { baseName = "CustomerServiceConsumer" } }
     iosSimulatorArm64 { binaries.framework { baseName = "CustomerServiceConsumer" } }
     sourceSets.commonMain.dependencies {
         implementation("com.github.gycrosskit.customer-service:customer-service:$componentVersion")
