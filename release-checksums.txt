@@ -1,2 +1,3 @@
 # immutable-tag sha256-of-customer-service-maven.tar.gz
 0.1.3 85b3817d5ede0f1b7f0192659bb855b16bae16076c35b34d7aa040e331d698f4
+0.1.4 cd4dc02bc34989816f24efcd7ed3b035eb06c816e9d66a347ace1ec6b2ce3df4
