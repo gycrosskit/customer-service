@@ -21,6 +21,7 @@ kotlin {
             implementation("com.tencent.imsdk:imsdk-plus:9.1.7818")
         }
         commonTest.dependencies { implementation(kotlin("test")) }
+        androidUnitTest.dependencies { implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2") }
     }
 }
 android {
