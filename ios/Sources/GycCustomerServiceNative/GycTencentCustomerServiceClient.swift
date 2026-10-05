@@ -4,9 +4,12 @@ import TencentCloudAIDeskCustomer
 import TDeskCore
 import UIKit
 
-/// 进程唯一原生适配器；宿主持有不可取消的会话操作与等待，不因页面重建创建第二份 SDK。
+/// 进程唯一原生适配器。宿主与 Live 共用串行屏障，不因页面重建创建第二份 SDK。
+/// 方法将操作和 completion 转到主线程；厂商操作不可取消，调用方结束等待不代表屏障可释放。
 public final class GycTencentCustomerServiceClient {
+    /// 进程共享实例；prepared 身份与 runtime 所有权由本实例持有。
     public static let shared = GycTencentCustomerServiceClient()
+    /// 在主线程设置及调用，返回当前可展示的活动容器；未设置或容器忙时 open 失败。
     public var presenterResolver: () -> UIViewController? = { nil }
     private var ownedIdentity: CustomerServiceIdentity?
     private var ownsRuntime = false
@@ -14,6 +17,9 @@ public final class GycTencentCustomerServiceClient {
     private var presentedController: CustomerServiceNavigationController?
     private init() {}
 
+    /// 准备厂商 facade，同身份可复用，foreign runtime 不会被覆盖。completion 在主线程结算。
+    /// appId 必须大于 0 且与共用 IM 一致，userId/userSig 不得为空白；不会 trim 实际传给厂商的值。
+    /// nickname/avatar 允许为空，签名有效期与隐私准入由宿主负责；不要记录 userSig。
     public func prepare(
         appId: Int32,
         userId: String,
@@ -23,7 +29,8 @@ public final class GycTencentCustomerServiceClient {
         completion: @escaping (Error?) -> Void
     ) {
         onMain {
-            guard appId > 0, !userId.isEmpty, !userSig.isEmpty,
+            guard appId > 0, !userId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !userSig.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   let manager = TencentCloudCustomerManager.shared() else {
                 completion(self.failure("Invalid customer service configuration"))
                 return
@@ -86,6 +93,7 @@ public final class GycTencentCustomerServiceClient {
         }
     }
 
+    /// 更新准备身份的昵称/头像（空值透传）；身份/AppId 失效或厂商失败通过主线程 completion 返回。
     public func syncProfile(nickname: String, avatar: String, completion: @escaping (Error?) -> Void) {
         onMain {
             let configuredAppId = TDeskLogin.getSdkAppID()
@@ -101,7 +109,8 @@ public final class GycTencentCustomerServiceClient {
         }
     }
 
-    /// 只包装厂商页面；真实 dismiss 后回调，照片等全屏子页面不视为关闭。
+    /// 展示厂商页面；主线程 completion 只在真实 dismiss 或展示失败后结算一次。
+    /// 照片等全屏子页面不视为关闭；重复打开失败，reset 关闭本组件页面后结算取消错误。
     public func open(completion: @escaping (Error?) -> Void) {
         onMain {
             let configuredAppId = TDeskLogin.getSdkAppID()
@@ -130,6 +139,8 @@ public final class GycTencentCustomerServiceClient {
         }
     }
 
+    /// 先关闭本组件页面，再清本地身份；仅仍自有 runtime 才 unInit，借用身份不注销。
+    /// 主线程 completion 等真实 callback；失败且仍自有时保留清理权限供宿主重试。
     public func reset(completion: @escaping (Error?) -> Void) {
         onMain {
             let cleanup = {

@@ -15,7 +15,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-/** 进程唯一 SDK 适配器。宿主必须串行持有不可取消的 prepare/sync/reset，不能以等待取消重建本实例。 */
+/**
+ * 进程唯一 SDK 适配器，宿主与 Live 共用串行屏障，不能以等待取消重建本实例。
+ * prepare/sync/reset 切到 Main 并等待不可取消的厂商操作；chatIntent 必须在 Main 调用。
+ * reset 只释放仍属于本组件的 runtime，不注销借用或被外部接管的身份。
+ * @param onSdkError 厂商失败回调，可能在厂商回调线程执行；宿主负责安全记录，勿记录凭据。
+ */
 class AndroidTencentCustomerServiceClient(
     private val onSdkError: (operation: String, code: Int, message: String?) -> Unit = { _, _, _ -> },
 ) {
@@ -23,6 +28,12 @@ class AndroidTencentCustomerServiceClient(
     private var ownsRuntime = false
     private var operationSerial = 0L
 
+    /**
+     * 校验凭据并准备厂商 facade；同身份可复用，共用 IM 的 foreign 身份不会被覆盖。
+     * 调用方取消仍等真实 callback；宿主必须持有串行屏障到返回。false 表示 SDK 拒绝/失败。
+     * @param context 只将 applicationContext 交给 SDK，不持有 Activity。
+     * @param profile 已通过隐私准入的资料；无效 appId/空白凭据抛出 IllegalArgumentException。
+     */
     suspend fun prepare(
         context: Context,
         profile: CustomerServiceProfile,
@@ -89,6 +100,10 @@ class AndroidTencentCustomerServiceClient(
         }
     }
 
+    /**
+     * 更新当前准备身份的昵称/头像；空字符串按厂商语义透传，身份失效或 SDK 失败返回 false。
+     * 在 Main 等真实 callback，调用方取消不提前释放宿主串行屏障。
+     */
     suspend fun syncProfile(
         nickname: String,
         avatar: String,
@@ -118,7 +133,10 @@ class AndroidTencentCustomerServiceClient(
         }
     }
 
-    /** 只创建厂商原生页面 Intent；真正 Activity Result 及等待由宿主管理。 */
+    /**
+     * 在 Main 为有效、未销毁的 activity 创建厂商 Intent；Activity Result 与重复打开等待由宿主管理。
+     * 未准备、身份/AppId 变化或 Activity 已结束时抛出 IllegalStateException。
+     */
     fun chatIntent(activity: Activity): Intent {
         check(!activity.isFinishing && !activity.isDestroyed)
         val sdk = TencentAiDeskCustomer.getInstance()
@@ -129,7 +147,10 @@ class AndroidTencentCustomerServiceClient(
         return sdk.getCustomerServiceChatIntent(activity)
     }
 
-    // 厂商没有取消 init/unInit；等真实回调后才释放宿主串行锁并提交所有权。
+    /**
+     * 清除本地准备身份；仅仍自有的 runtime 才执行 unInit，不访问未准备的 SDK。
+     * 在 Main 等不可取消 callback；失败且仍自有时返回 false 并保留权限供重试。
+     */
     suspend fun reset(): Boolean = withContext(Dispatchers.Main.immediate + NonCancellable) {
         // 隐私准入前也可能收到根 reset；没有自有身份时不能触碰 SDK 单例。
         val serial = ++operationSerial

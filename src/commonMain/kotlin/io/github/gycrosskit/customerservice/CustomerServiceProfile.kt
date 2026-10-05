@@ -1,6 +1,15 @@
 package io.github.gycrosskit.customerservice
 
-/** 宿主已通过业务准入并取得的凭据；组件不读取业务账号或生成 UserSig。 */
+/**
+ * 宿主通过业务与隐私准入后提供的资料；组件不读取业务账号或生成 UserSig。
+ * 不可变值可跨线程传递，凭据只交给厂商 SDK，宿主不得写入日志。
+ *
+ * @property appId 腾讯 SDKAppID，必须大于 0，且与共用 IM 的其他组件保持一致。
+ * @property userId 腾讯用户标识，不得为空白；不会被组件 trim 或转换。
+ * @property userSig 宿主取得的签名，不得为空白；有效期与刷新由宿主负责。
+ * @property nickname 交给厂商的显示昵称，允许为空；不得用于身份判定。
+ * @property avatar 交给厂商的头像地址，允许为空；下载与展示由厂商负责。
+ */
 data class CustomerServiceProfile(
     val appId: Int,
     val userId: String,
