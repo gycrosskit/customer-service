@@ -103,8 +103,16 @@ public final class GycTencentCustomerServiceClient {
                 completion(self.failure("Customer service identity is no longer owned"))
                 return
             }
+            let serial = self.operationSerial
             manager.setSelfInfo(nickname, avatar: avatar) { success in
-                self.onMain { completion(success ? nil : self.failure("Customer service profile sync failed")) }
+                self.onMain {
+                    // 厂商回包期间共享身份可能被接管；只为仍准备的同一代次结算成功。
+                    let actualAppId = TDeskLogin.getSdkAppID()
+                    let valid = serial == self.operationSerial && self.ownedIdentity == owned &&
+                        self.runtimeUser() == owned.userId && self.sdkUser(manager) == owned.userId &&
+                        (actualAppId <= 0 || actualAppId == owned.appId)
+                    completion(success && valid ? nil : self.failure("Customer service profile sync failed or identity changed"))
+                }
             }
         }
     }

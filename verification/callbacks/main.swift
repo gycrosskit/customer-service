@@ -114,3 +114,20 @@ assert(result == nil && closedCount == 1 && sdk.cleanups.isEmpty)
 navigation.viewDidDisappear(false)
 assert(closedCount == 1)
 print("Customer invalid-input, pending-login and full-screen child lifecycle contracts passed")
+
+// 资料请求在途时的账号/AppId接管和reset不能通过迟到成功回包复活旧准备身份。
+sdk.deferProfile = true
+for takeover in ["user", "appId", "reset"] {
+    TDeskLogin.sdkAppID = 100; runtime("member", ready: false); prepare(); runtime("member"); finish()
+    var completed = false
+    client.syncProfile(nickname: "new", avatar: "") { error in completed = true; assert(error != nil) }
+    assert(!completed)
+    if takeover == "user" { runtime("foreign") }
+    else if takeover == "appId" { TDeskLogin.sdkAppID = 101 }
+    else { client.reset { assert($0 == nil) } }
+    sdk.profileCallbacks.removeFirst()(true)
+    assert(completed)
+    client.reset { assert($0 == nil) }
+}
+sdk.deferProfile = false
+print("Customer profile callback rejects late success after user/AppId takeover or reset")

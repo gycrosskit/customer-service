@@ -64,6 +64,22 @@ fun main()=runBlocking {
   check(sdk.cleanups==cleanupsBeforeRetry+1 && !retry.isCompleted)
   sdk.cleanup!!.onSuccess();sdk.cleanup=null;sdk.deferCleanup=false
   check(retry.await())
+  sdk.deferProfile=true
+  for(takeover in listOf("user","appId","reset")) {
+   im.loginUser="member";sdk.isUserLoggedIn=false;TUILogin.appId=100
+   val client=AndroidTencentCustomerServiceClient();check(client.prepare(Activity(),profile))
+   val updating=async(start=CoroutineStart.UNDISPATCHED){client.syncProfile("new","")}
+   check(!updating.isCompleted)
+   when(takeover) {
+    "user" -> im.loginUser="foreign"
+    "appId" -> TUILogin.appId=101
+    else -> check(client.reset())
+   }
+   sdk.profile!!.onSuccess();sdk.profile=null
+   check(!updating.await()) {"late profile success accepted after $takeover"}
+   check(client.reset())
+  }
+  sdk.deferProfile=false
   println("PASS Android production callback contracts: AppId/borrow, invalid input, login pending, destroyed Activity, cancellation and cleanup retry")
  }finally{Dispatchers.resetMain()}
 }

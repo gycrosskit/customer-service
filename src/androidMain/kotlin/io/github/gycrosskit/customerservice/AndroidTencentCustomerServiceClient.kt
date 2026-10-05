@@ -116,7 +116,8 @@ class AndroidTencentCustomerServiceClient(
             onSdkError("syncProfile", -1, "Customer service identity is no longer owned")
             return@withContext false
         }
-        suspendCancellableCoroutine { continuation ->
+        val serial = operationSerial
+        val updated = suspendCancellableCoroutine { continuation ->
             sdk.setSelfInfo(
                 nickname,
                 avatar,
@@ -131,6 +132,10 @@ class AndroidTencentCustomerServiceClient(
                 },
             )
         }
+        // SDK 成功不证明旧身份仍有效；外部接管或 reset 后不能结算为旧资料同步成功。
+        val actualAppId = TUILogin.getSdkAppId()
+        updated && serial == operationSerial && ownedIdentity == identity && runtimeUser() == identity.userId &&
+            sdkUser(sdk) == identity.userId && (actualAppId <= 0 || actualAppId == identity.appId)
     }
 
     /**
