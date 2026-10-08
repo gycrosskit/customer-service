@@ -1,9 +1,13 @@
 # GY CrossKit 腾讯客服适配
 
-Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
-聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。OHOS 没有实现，宿主继续报告 unsupported。
+2026-10-08 功能索引：根KMP提供资料/Android client，iOS Git Pod提供Swift client；CMP/Kuikly宿主调用原生vendor页面，库没有独立聊天UI，OHOS客服排除。 详见[功能与平台差异](docs/功能与平台差异.md)，含固定基线、五入口矩阵、真实回归与未验收范围。当前发布组合：Maven 0.1.6；未变GycCustomerServiceNative Git Pod继续0.1.5。各渠道消费与设备验收分别核对。
 
-当前 Maven / Git Pod 固定版本 **0.1.5**：syncProfile在SDK回调后重新校验代次、实际身份和已知AppId，拒绝reset或外部接管后的迟到成功。**已发布，实际 Git Pod 厂商 SDK/App 链接及远程文件核验结果见完整审查**。上版0.1.4已发布，历史验收不代算候选。详见[完整源码审查](verification/完整源码审查.md)及[腾讯客服鸿蒙接入核查](verification/腾讯客服鸿蒙接入核查.md)。
+最终核对（2026-10-08）：本轮重跑生产Android/Swift回调合同，vendor/UIKit为替身；真实聊天/云身份/视觉未验。 逐项时点与边界见[验证范围](docs/功能与平台差异.md#sdk系统与真实验证范围)。
+
+Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
+聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。Android 2.6.0 的 `initWithProfile` 会将主题重置为 vendor 的 `business` 默认；组件不再预设会被覆盖的 `finance`。品牌主题如需配置，由宿主在 `prepare` 成功后通过厂商 API 设置；这不代表 Android/iOS 厂商 UI 已视觉对齐。OHOS当前没有实现，按本轮用户要求排除；五入口表中E表示excluded，不能把排除项统计为平台验收失败。
+
+历史Maven / Git Pod **0.1.5**：syncProfile在SDK回调后重新校验代次、实际身份和已知AppId，拒绝reset或外部接管后的迟到成功。**已发布，实际 Git Pod 厂商 SDK/App 链接及远程文件核验结果见完整审查**。上版0.1.4已发布，历史验收不代算候选。详见[完整源码审查](verification/完整源码审查.md)及[腾讯客服鸿蒙接入核查](verification/腾讯客服鸿蒙接入核查.md)。
 
 ## 架构与调用流程
 
@@ -101,12 +105,12 @@ classDiagram
 ## 安装与消费
 
 包装代码使用 [Apache-2.0](LICENSE)；[GitHub 仓库](https://github.com/gycrosskit/customer-service) 通过不可变标签和 Release 发布。
-KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.5`；Android 最低 API 24、iOS 原生最低 15.0。
+KMP 坐标是 `com.github.gycrosskit.customer-service:customer-service:0.1.6`；Android 最低 API 24、iOS 原生最低 15.0。
 KMP root 提供数据类型与 Android 原生适配器；iOS Swift 客户端单独用 `GycCustomerServiceNative` Pod，不要求宿主再导出未消费的 KMP Bridge。
 
 ```kotlin
 // 在 dependencyResolutionManagement.repositories 中添加 maven("https://jitpack.io")。
-implementation("com.github.gycrosskit.customer-service:customer-service:0.1.5")
+implementation("com.github.gycrosskit.customer-service:customer-service:0.1.6")
 ```
 
 ```ruby
@@ -116,7 +120,7 @@ pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-
 本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
 iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
-当前 Maven/Git Pod `0.1.5` 的冻结归档、Release重下载和真实Git Pod/App链接核验通过，新Maven最终消费通过，结果见完整审查；上版0.1.4历史结果见 [发布验收](verification/发布验收.md)。AppId 使用保护与合法 borrow 的清理权限规则沿用既有实现；历史版本证据不代算新候选。
+历史Maven/Git Pod `0.1.5` 的冻结归档、Release重下载和真实Git Pod/App链接核验通过，新Maven最终消费通过，结果见完整审查；上版0.1.4历史结果见 [发布验收](verification/发布验收.md)。AppId 使用保护与合法 borrow 的清理权限规则沿用既有实现；历史版本证据不代算新候选。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
 

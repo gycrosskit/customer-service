@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 group = providers.environmentVariable("GROUP").orElse("com.github.gycrosskit").get()
-version = providers.environmentVariable("VERSION").orElse("0.1.5").get()
+version = providers.environmentVariable("VERSION").orElse("0.1.6").get()
 kotlin {
     androidTarget {
         publishLibraryVariants("release")
