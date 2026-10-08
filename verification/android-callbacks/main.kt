@@ -12,7 +12,9 @@ fun main()=runBlocking {
   val im=V2TIMManager.getInstance();val sdk=TencentAiDeskCustomer.getInstance();val profile=CustomerServiceProfile(100,"member","mock-sig",""," ")
   for(borrow in listOf(false,true)) {
    im.loginUser=if(borrow)"member" else null;sdk.isUserLoggedIn=false;sdk.loginUser=null;TUILogin.appId=100
+   val themesBefore=sdk.themeCalls
    val client=AndroidTencentCustomerServiceClient();check(client.prepare(Activity(),profile))
+   check(sdk.themeCalls==themesBefore) {"component must not override vendor theme before initialization"}
    val updates=sdk.updates;val pages=sdk.pages;val cleanups=sdk.cleanups
    TUILogin.appId=101
    check(!client.syncProfile("foreign","avatar")) {"same user foreign AppId updated profile"}

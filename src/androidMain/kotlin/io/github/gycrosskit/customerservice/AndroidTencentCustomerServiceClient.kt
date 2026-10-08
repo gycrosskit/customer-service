@@ -7,7 +7,6 @@ import com.tencent.imsdk.v2.V2TIMManager
 import com.tencent.qcloud.deskcore.TUILogin
 import com.tencentcloud.tencentcloudcustomer.Callbacks.AIDeskCallback
 import com.tencentcloud.tencentcloudcustomer.Callbacks.TencentAiDeskCustomerLoginCallback
-import com.tencentcloud.tencentcloudcustomer.Config.TencentAiDeskCustomerThemeConfig
 import com.tencentcloud.tencentcloudcustomer.TencentAiDeskCustomer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -61,7 +60,6 @@ class AndroidTencentCustomerServiceClient(
         val previouslyOwned = customerServiceOwnsActualIdentity(previousIdentity, ownsRuntime, actual, TUILogin.getSdkAppId())
         val mayOwn = actual == null || previouslyOwned
         ownedIdentity = null; ownsRuntime = false
-        sdk.setTheme(TencentAiDeskCustomerThemeConfig.finance)
         sdk.setShowAvatar(true)
         sdk.setShowHumanService(true)
         sdk.setShowLeaveQueue(true)
@@ -165,7 +163,17 @@ class AndroidTencentCustomerServiceClient(
             ownedIdentity = null; ownsRuntime = false; return@withContext true
         }
         val sdk = TencentAiDeskCustomer.getInstance()
-        val reset = unInit(sdk)
+        val reset = suspendCancellableCoroutine { continuation ->
+            sdk.unInit(object : AIDeskCallback() {
+                override fun onSuccess() {
+                    if (continuation.isActive) continuation.resume(true)
+                }
+                override fun onError(code: Int, desc: String?) {
+                    onSdkError("unInit", code, desc)
+                    if (continuation.isActive) continuation.resume(false)
+                }
+            })
+        }
         if (serial != operationSerial) return@withContext false
         if (!reset && customerServiceOwnsActualIdentity(identity, true, runtimeUser(), TUILogin.getSdkAppId())) return@withContext false
         ownedIdentity = null; ownsRuntime = false
@@ -176,16 +184,4 @@ class AndroidTencentCustomerServiceClient(
 
     private fun sdkUser(sdk: TencentAiDeskCustomer): String? =
         if (sdk.isUserLoggedIn) sdk.loginUser?.takeIf(String::isNotBlank) else null
-
-    private suspend fun unInit(sdk: TencentAiDeskCustomer): Boolean = suspendCancellableCoroutine { continuation ->
-        sdk.unInit(object : AIDeskCallback() {
-            override fun onSuccess() {
-                if (continuation.isActive) continuation.resume(true)
-            }
-            override fun onError(code: Int, desc: String?) {
-                onSdkError("unInit", code, desc)
-                if (continuation.isActive) continuation.resume(false)
-            }
-        })
-    }
 }

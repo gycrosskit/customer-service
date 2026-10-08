@@ -20,7 +20,7 @@ open class AIDeskCallback { open fun onSuccess(){};open fun onError(code:Int,des
 open class TencentAiDeskCustomerLoginCallback {open fun onSuccess(){};open fun onError(code:Int,desc:String?){} }
 ''',
 'Theme.kt': '''package com.tencentcloud.tencentcloudcustomer.Config
-object TencentAiDeskCustomerThemeConfig {val finance=Any()}
+enum class TencentAiDeskCustomerThemeConfig {business, finance, service}
 ''',
 'Desk.kt': '''package com.tencentcloud.tencentcloudcustomer
 import android.content.*
@@ -28,12 +28,14 @@ import android.app.Activity
 import com.tencentcloud.tencentcloudcustomer.Callbacks.*
 import com.tencent.imsdk.v2.V2TIMManager
 import com.tencent.qcloud.deskcore.TUILogin
+import com.tencentcloud.tencentcloudcustomer.Config.TencentAiDeskCustomerThemeConfig
 class TencentAiDeskCustomer {
  var isUserLoggedIn=false;var loginUser:String?=null;var updates=0;var pages=0;var cleanups=0
  var deferProfile=false;var profile: TencentAiDeskCustomerLoginCallback?=null
  var initializeCalls=0;var deferInitialization=false;var deferCleanup=false;var initialization:AIDeskCallback?=null;var cleanup:AIDeskCallback?=null
- fun setTheme(value:Any){};fun setShowAvatar(value:Boolean){};fun setShowHumanService(value:Boolean){};fun setShowLeaveQueue(value:Boolean){};fun setShowServiceRating(value:Boolean){};fun setShowEndHumanService(value:Boolean){};fun setShowNickName(value:Boolean){}
- fun initWithProfile(context:Context,appId:Int,userId:String,userSig:String,nickname:String,avatar:String,callback:AIDeskCallback) {initializeCalls++;TUILogin.appId=appId;V2TIMManager.getInstance().loginUser=userId;loginUser=userId;isUserLoggedIn=true;if(deferInitialization) initialization=callback else callback.onSuccess()}
+ var themeCalls=0;var currentTheme=TencentAiDeskCustomerThemeConfig.business
+ fun setTheme(value:TencentAiDeskCustomerThemeConfig){themeCalls++;currentTheme=value};fun setShowAvatar(value:Boolean){};fun setShowHumanService(value:Boolean){};fun setShowLeaveQueue(value:Boolean){};fun setShowServiceRating(value:Boolean){};fun setShowEndHumanService(value:Boolean){};fun setShowNickName(value:Boolean){}
+ fun initWithProfile(context:Context,appId:Int,userId:String,userSig:String,nickname:String,avatar:String,callback:AIDeskCallback) {currentTheme=TencentAiDeskCustomerThemeConfig.business;initializeCalls++;TUILogin.appId=appId;V2TIMManager.getInstance().loginUser=userId;loginUser=userId;isUserLoggedIn=true;if(deferInitialization) initialization=callback else callback.onSuccess()}
  fun setSelfInfo(nickname:String,avatar:String,callback:TencentAiDeskCustomerLoginCallback){updates++;if(deferProfile) profile=callback else callback.onSuccess()}
  fun getCustomerServiceChatIntent(activity:Activity):Intent {pages++;return Intent()}
  fun unInit(callback:AIDeskCallback){cleanups++;if(deferCleanup) cleanup=callback else callback.onSuccess()}
