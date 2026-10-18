@@ -1,11 +1,11 @@
 # GY CrossKit 腾讯客服适配
 
-2026-10-08 功能索引：根KMP提供资料/Android client，iOS Git Pod提供Swift client；CMP/Kuikly宿主调用原生vendor页面，库没有独立聊天UI，OHOS客服排除。 详见[功能与平台差异](docs/功能与平台差异.md)，含固定基线、五入口矩阵、真实回归与未验收范围。当前发布组合：Maven 0.1.6；未变GycCustomerServiceNative Git Pod继续0.1.5。各渠道消费与设备验收分别核对。
+2026-10-08 功能索引：根KMP提供资料/Android client，iOS Git Pod提供Swift client；宿主调用原生 vendor 页面，库没有独立聊天UI，OHOS客服排除。 详见[功能与平台差异](docs/功能与平台差异.md)，含固定基线、三端矩阵、真实回归与未验收范围。当前发布组合：Maven 0.1.6；未变GycCustomerServiceNative Git Pod继续0.1.5。各渠道消费与设备验收分别核对。
 
 最终核对（2026-10-08）：本轮重跑生产Android/Swift回调合同，vendor/UIKit为替身；真实聊天/云身份/视觉未验。 逐项时点与边界见[验证范围](docs/功能与平台差异.md#sdk系统与真实验证范围)。
 
 Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
-聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。Android 2.6.0 的 `initWithProfile` 会将主题重置为 vendor 的 `business` 默认；组件不再预设会被覆盖的 `finance`。品牌主题如需配置，由宿主在 `prepare` 成功后通过厂商 API 设置；这不代表 Android/iOS 厂商 UI 已视觉对齐。OHOS当前没有实现，按本轮用户要求排除；五入口表中E表示excluded，不能把排除项统计为平台验收失败。
+聊天 UI 与资源全部使用厂商依赖，组件不复制 vendor 源码或资源。Android 2.6.0 的 `initWithProfile` 会将主题重置为 vendor 的 `business` 默认；组件不再预设会被覆盖的 `finance`。品牌主题如需配置，由宿主在 `prepare` 成功后通过厂商 API 设置；这不代表 Android/iOS 厂商 UI 已视觉对齐。OHOS当前没有实现，按本轮用户要求排除；三端表中 E 表示 excluded，不能把排除项统计为平台验收失败。
 
 `syncProfile` 在 SDK 回调后重新校验代次、实际身份和已知 AppId，拒绝 reset 或外部接管后的迟到成功。源码与渠道证据见[完整源码审查](verification/完整源码审查.md)，OHOS 调研见[腾讯客服鸿蒙接入核查](verification/腾讯客服鸿蒙接入核查.md)。
 
