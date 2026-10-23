@@ -162,7 +162,9 @@ swiftc ios/Sources/GycCustomerServiceNative/CustomerServiceOwnership.swift ios/S
 build/verification/ownership-check
 ```
 
-独立消费工程见 `verification/gradle`，正式验证通过 exclusiveContent 仅从 JitPack 消费本组件。
+源码和独立消费工程统一使用公共 Kotlin `2.2.21-1.0.0` 工具链；`gradle/native-toolchain.properties` 与实际插件版本一致。该构建配置不增加 OHOS 客服实现。
+
+独立消费工程见 `verification/gradle`，默认通过 exclusiveContent 仅从 JitPack 消费本组件。Jenkins 源码验收还先向本轮私有 `build/maven` 生成 `0.1.6-toolchain-candidate`，再以 `-PcustomerServiceMavenRepo="$PWD/build/maven" -PcustomerServiceVersion=0.1.6-toolchain-candidate` 编译现有 API consumer；该模式不回退到 JitPack，不上传候选。去掉该本地仓库参数并使用 `-PcustomerServiceVersion=0.1.6`，单独验证公共工具链对既有公开版本的消费兼容性。两种模式都执行 `verifyExactComponentVersion`；Android 编译和三种 iOS framework 链接分别记录。工具链切换后的实际远程结果以对应源码/CI SHA 的 Jenkins 记录为准，配置与静态合同检查不算构建或消费已通过。
 发布提交、归档 SHA-256、历史验证命令及边界见[发布验收](verification/发布验收.md)；当前测试入口与执行范围见[功能与平台差异](docs/功能与平台差异.md#sdk系统与真实验证范围)。单测与编译不能替代实际登录、聊天、同 IM 直播账号共存、账号切换和真机生命周期验收。
 
 ## 自动回归

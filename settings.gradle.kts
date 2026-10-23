@@ -1,6 +1,8 @@
 import org.gradle.api.initialization.resolve.RepositoriesMode
 pluginManagement {
     repositories {
+        maven("https://maven.eazytec-cloud.com/nexus/repository/maven-public/")
+        maven("https://mirrors.tencent.com/nexus/repository/maven-public/")
         maven("https://maven.aliyun.com/repository/google")
         maven("https://maven.aliyun.com/repository/public")
         google(); mavenCentral(); gradlePluginPortal()
@@ -9,6 +11,8 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        maven("https://maven.eazytec-cloud.com/nexus/repository/maven-public/")
+        maven("https://mirrors.tencent.com/nexus/repository/maven-public/")
         maven("https://maven.aliyun.com/repository/google")
         maven("https://maven.aliyun.com/repository/public")
         google(); mavenCentral()
