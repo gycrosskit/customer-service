@@ -2,6 +2,8 @@
 
 2026-10-08 功能索引：根KMP提供资料/Android client，iOS Git Pod提供Swift client；宿主调用原生 vendor 页面，库没有独立聊天UI，OHOS客服排除。 详见[功能与平台差异](docs/功能与平台差异.md)，含固定基线、三端矩阵、真实回归与未验收范围。当前发布组合：Maven 0.1.6；未变GycCustomerServiceNative Git Pod继续0.1.5。各渠道消费与设备验收分别核对。
 
+2026-10-24 版本准备：源码、导出脚本、Git Pod 与独立 consumer 默认版本统一为 `1.0.0`，当前是未发布候选；下方安装示例保留既有已发布版本。构建、回归、打包与发布消费的迁移目标为 Jenkins，待本轮实跑验收，实际通过范围以绑定源码/CI SHA 的验收记录为准。
+
 最终核对（2026-10-08）：本轮重跑生产Android/Swift回调合同，vendor/UIKit为替身；真实聊天/云身份/视觉未验。 逐项时点与边界见[验证范围](docs/功能与平台差异.md#sdk系统与真实验证范围)。
 
 Android/iOS 腾讯 AI Desk 的最小原生适配：配置厂商 UI、准备账号、同步资料、取得或展示厂商聊天页面、清理自有身份。
@@ -117,9 +119,9 @@ implementation("com.github.gycrosskit.customer-service:customer-service:0.1.6")
 pod 'GycCustomerServiceNative', :git => 'https://github.com/gycrosskit/customer-service.git', :tag => '0.1.5'
 ```
 
-本地验证先执行 `bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven.tar.gz`
+Jenkins 打包执行 `VERSION=1.0.0 bash scripts/export-artifacts.sh`，解包 `build/release/customer-service-maven.tar.gz`
 到独立临时 Maven 仓库，通过仓库外的 init script 对候选模块做精确 exclusiveContent；不用 `includeBuild`、源码替换或永久 `mavenLocal`。
-iOS 正式验证从上面的 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。
+iOS 正式验证由 Jenkins 从待验收版本的不可变 Git/tag Pod 下载 Swift 源码并编译独立消费工程；不使用本地 path。`1.0.0` 发布后仍需单独核验该版本，不能复用上方 `0.1.5` 的验收。
 各版本冻结归档、Release 下载与远程消费记录见[发布验收](verification/发布验收.md)和[完整源码审查](verification/完整源码审查.md)；历史证据不代算当前版本。
 `jitpack-install.sh` 从同版本 GitHub Release 下载 Maven 归档并校验 SHA-256，供 JitPack 安装 macOS 产物。
 归档不是宿主 Maven 地址；正式消费仍使用上面的 JitPack 坐标。
@@ -155,24 +157,21 @@ Release Maven 归档仅含本组件的 AAR/KLIB/metadata；Native 0.1.0 归档�
 
 ## 验证
 
-```bash
-bash gradlew testDebugUnitTest compileKotlinIosSimulatorArm64 publishAllPublicationsToStagingRepository
-mkdir -p build/verification
-swiftc ios/Sources/GycCustomerServiceNative/CustomerServiceOwnership.swift ios/Sources/GycCustomerServiceNative/CustomerServicePresentationCompletion.swift verification/main.swift -o build/verification/ownership-check
-build/verification/ownership-check
-```
+本轮拟由 Jenkins 执行构建、行为回归、平台编译/链接、归档与发布消费，尚待实际验收；本机只做 Python 3 标准库、shell 语法和文档等轻量检查，不运行 Gradle、Swift/Xcode 或 Hvigor 重编译。
 
-独立消费工程见 `verification/gradle`，正式验证通过 exclusiveContent 仅从 JitPack 消费本组件。
+源码和独立消费工程统一使用公共 Kotlin `2.2.21-1.0.0` 工具链；`gradle/native-toolchain.properties` 与实际插件版本一致。该构建配置不增加 OHOS 客服实现。
+
+独立消费工程见 `verification/gradle`，默认版本为未发布候选 `1.0.0`，通过 exclusiveContent 仅从 JitPack 消费本组件。Jenkins 源码验收先以 `VERSION=1.0.0` 向本轮私有 `build/maven` 生成候选，再以 `-PcustomerServiceMavenRepo="$PWD/build/maven" -PcustomerServiceVersion=1.0.0` 编译现有 API consumer；该模式不回退到 JitPack，不上传候选。在 `1.0.0` 正式发布前，不能把默认公网消费当作可用安装方式。去掉该本地仓库参数并显式使用 `-PcustomerServiceVersion=0.1.6`，单独验证公共工具链对既有公开版本的消费兼容性。两种模式都执行 `verifyExactComponentVersion`；Android 编译和三种 iOS framework 链接分别记录。工具链切换后的实际远程结果以对应源码/CI SHA 的 Jenkins 记录为准，配置与静态合同检查不算构建或消费已通过。
 发布提交、归档 SHA-256、历史验证命令及边界见[发布验收](verification/发布验收.md)；当前测试入口与执行范围见[功能与平台差异](docs/功能与平台差异.md#sdk系统与真实验证范围)。单测与编译不能替代实际登录、聊天、同 IM 直播账号共存、账号切换和真机生命周期验收。
 
 ## 自动回归
 
-[Source regression](.github/workflows/regression.yml) 按事件分阶段：PR 先判断变更范围，仅源码变更运行已有 Android/Native 测试与编译；纯文档 PR 和 `main` push 只运行轻量脚本/配置检查。手动运行不填版本时执行源码回归，未知路径保守按源码处理。线上执行结果与耗时以实际 Actions 运行为准。
+本轮 Jenkins 迁移目标为：source verify 执行 Android/Native 源码回归及候选/既有公开版消费，package 生成候选归档，发布消费阶段对精确已发布版本核验冻结归档、tag/commit 与公开文件后执行独立 consumer。实际执行尚待本轮验收，发布前后证据分别保存，不使用 `mavenLocal` 或源码替换公开依赖。
 
-[Release validation](.github/workflows/release-validation.yml) 在 Maven Release 发布或手动填写精确已发布版本时，`verify-public` 统一校验一次冻结归档、精确 tag/commit、完整 publication 清单和公开文件；通过后 Android/Native 独立消费者从 JitPack 解析该版本。PR 不再反复消费旧基线；不使用 `mavenLocal`、本库源码或归档替换远程依赖。此流程不发布二进制。
+仓库中的 [Source regression](.github/workflows/regression.yml) 与 [Release validation](.github/workflows/release-validation.yml) 仍保留并启用，供原 Actions 流程对照；本轮 Jenkins 迁移的执行与耗时以准确构建链接及源码/CI SHA 为准，不以历史 Actions 结果代算。
 
-GitHub-hosted runner 的实际结果以 Actions 为准；没有 DevEco/ohpm runner，因此 HAR 构建、ohpm Registry 安装、完整原生 SDK 集成和真机业务验收仍按既有验证文档执行，不能由这些 job 的成功代算。
+本库未实现 OHOS 客服，不生成 HAR。源码、消费编译/链接不能代算真实原生 SDK 登录、聊天或真机业务验收。
 
-阶段、缓存、有限网络重试、失败记录与证据边界见[共用 CI 规则](https://github.com/gycrosskit/.github/blob/main/docs/持续集成门禁.md)；本库实际平台命令以 workflow 为准。源码通过、远程消费、HAR/ohpm 与设备验收分别记录。
+阶段、缓存、有限网络重试、失败记录与证据边界见[共用 CI 规则](https://github.com/gycrosskit/.github/blob/main/docs/持续集成门禁.md)；本库实际平台命令以 Jenkins 的固定版本 recipe 为准。源码通过、远程消费与设备验收分别记录。
 
 公网核验同步组织 `templates/check-public-maven.py`：使用冻结归档给出的完整 publications 清单，核对 JitPack tag/commit、每个公开 POM/Module、全部声明变体字节大小和四类哈希、内部精确版本及 `available-at`；MD5/SHA-1 sidecar 必须匹配。SHA-256/SHA-512 sidecar 的 HTTP 404 单独输出为渠道缺失，不计为校验通过。
