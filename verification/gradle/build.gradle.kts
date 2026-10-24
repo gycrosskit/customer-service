@@ -2,7 +2,7 @@ plugins {
     kotlin("multiplatform") version "2.2.21-1.0.0"
     id("com.android.library") version "8.10.1"
 }
-val componentVersion = providers.gradleProperty("customerServiceVersion").orElse("0.1.6").get()
+val componentVersion = providers.gradleProperty("customerServiceVersion").orElse("1.0.0").get()
 kotlin {
     androidTarget {
         compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
