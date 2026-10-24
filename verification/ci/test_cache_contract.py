@@ -2,6 +2,8 @@
 """缓存只用于源码编译；测试任务与发布验证保留原执行边界。"""
 from pathlib import Path
 import re
+import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 workflow = (ROOT / '.github/workflows/regression.yml').read_text()
@@ -40,3 +42,5 @@ assert 'exclusiveContent {' in consumer and 'includeGroup("com.github.gycrosskit
 assert 'candidateMaven?.toURI() ?: uri("https://jitpack.io")' in consumer
 assert "mavenLocal" not in consumer and "includeBuild" not in consumer
 print("Toolchain contract: common compiler, isolated candidate/public consumers; SDK execution not performed")
+
+subprocess.run([sys.executable, '-B', str(ROOT / 'verification/ci/test_android_callback_cache.py')], check=True)
