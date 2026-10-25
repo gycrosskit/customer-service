@@ -166,9 +166,9 @@ Release Maven 归档仅含本组件的 AAR/KLIB/metadata；Native 0.1.0 归档�
 
 ## 自动回归
 
-本轮 Jenkins 迁移目标为：source verify 执行 Android/Native 源码回归及候选/既有公开版消费，package 生成候选归档，发布消费阶段对精确已发布版本核验冻结归档、tag/commit 与公开文件后执行独立 consumer。实际执行尚待本轮验收，发布前后证据分别保存，不使用 `mavenLocal` 或源码替换公开依赖。
+本轮 Jenkins 迁移目标为：source verify 执行 Android/Native 源码回归，独立 package Job 按准确 SOURCE_SHA 冻结候选并验证私有消费，独立 release Job 绑定准确 Tag/候选核验冻结归档、tag/commit 与公开文件后执行独立公开 consumer。实际执行尚待本轮验收，发布前后证据分别保存，不使用 `mavenLocal` 或源码替换公开依赖。
 
-仓库中的 [Source regression](.github/workflows/regression.yml) 与 [Release validation](.github/workflows/release-validation.yml) 仍保留并启用，供原 Actions 流程对照；本轮 Jenkins 迁移的执行与耗时以准确构建链接及源码/CI SHA 为准，不以历史 Actions 结果代算。
+源码 verify 入口为[统一远程验证（Jenkins）](https://github.com/gycrosskit/.github/blob/main/docs/统一远程验证.md)；独立 package/release Job 的触发与证据合同见[发布流程](https://github.com/gycrosskit/.github/blob/main/docs/发布流程.md)。原 Actions workflow 已退出使用。执行与耗时以准确构建链接及源码/CI SHA 为准，不以历史 Actions 结果代算。
 
 本库未实现 OHOS 客服，不生成 HAR。源码、消费编译/链接不能代算真实原生 SDK 登录、聊天或真机业务验收。
 
